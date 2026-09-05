@@ -512,8 +512,8 @@
 
         function cleanOldHistory() {
             const history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-            const fiveDaysAgo = Date.now() - (5 * 24 * 60 * 60 * 1000);
-            const filtered = history.filter(item => item.timestamp >= fiveDaysAgo);
+            const fiveYearsAgo = Date.now() - (5 * 24 * 60 * 60 * 1000);
+            const filtered = history.filter(item => item.timestamp >= fiveYearsAgo);
             localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
         }
 
