@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>排七計算機 PRO MAX</title>
+    <title>排七計算機 PRO</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -11,11 +11,11 @@
             --surface: #f5efe6;        /* 淺奶茶輸入框與區塊 */
             --card: #ffffff;           /* 純白卡片襯托對比 */
             --border: #e2d7c7;         /* 柔和奶油棕邊框 */
-            --accent: #8c3b2b;         /* 沉穩深栗紅（主要強調與金額） */
-            --accent2: #d97724;        /* 暖陽橘（次要亮點） */
+            --accent: #8c3b2b;         /* 沉穩深栗紅 */
+            --accent2: #d97724;        /* 暖陽橘 */
             --red: #c0392b;            /* 警告/扣分深紅 */
             --green: #27ae60;          /* 勝場深綠 */
-            --text: #2b2623;           /* 高對比深褐黑文字，清晰不刺眼 */
+            --text: #2b2623;           /* 高對比深褐黑文字 */
             --muted: #73685f;          /* 次要說明文字 */
             --font-scale: 1;
         }
@@ -67,6 +67,21 @@
         .guide-num { width: 22px; height: 22px; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Orbitron'; font-size: calc(0.7em * var(--font-scale)); font-weight: 800; flex-shrink: 0; }
         .section-title { font-size: calc(0.85em * var(--font-scale)); letter-spacing: 0.15em; color: var(--accent); font-weight: 900; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; }
         .section-title::after { content: ''; flex: 1; height: 2px; background: linear-gradient(to right, var(--border), transparent); }
+        
+        .header-back-btn {
+            background: var(--card);
+            border: 2px solid var(--border);
+            color: var(--accent);
+            font-size: calc(0.8em * var(--font-scale));
+            font-weight: 900;
+            padding: 4px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .header-back-btn:active { background: var(--surface); }
+
         .screen { display: none; }
         .screen.active { display: block; }
         .setup-card { background: var(--card); border: 2px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 20px; box-shadow: 0 4px 16px rgba(115, 104, 95, 0.06); }
@@ -111,13 +126,24 @@
 
         .stats-card { background: var(--card); border: 2px solid var(--border); border-radius: 16px; padding: 22px; margin-top: 30px; box-shadow: 0 4px 12px rgba(115, 104, 95, 0.05); }
         .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
-        .time-input { background: var(--surface); border: 2px solid var(--border); border-radius: 8px; color: var(--text); padding: 10px; width: 100%; font-size: calc(0.85em * var(--font-scale)); font-weight: 700; color-scheme: light; }
+        .round-select { background: var(--surface); border: 2px solid var(--border); border-radius: 8px; color: var(--text); padding: 10px; width: 100%; font-size: calc(0.85em * var(--font-scale)); font-weight: 700; outline: none; cursor: pointer; }
+        .round-select:focus { border-color: var(--accent); background: #fff; }
         .stat-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         .stat-table th, .stat-table td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: calc(0.95em * var(--font-scale)); }
         .stat-table th { color: var(--accent); font-weight: 900; font-size: calc(0.85em * var(--font-scale)); }
         .stat-win { color: var(--green); font-family: 'Orbitron'; font-weight: 800; }
         .stat-loss { color: var(--red); font-family: 'Orbitron'; font-weight: 800; }
         .stat-zero { color: var(--muted); font-family: 'Orbitron'; font-weight: 700; }
+
+        /* ----- 彈窗 Modal 樣式 ----- */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(43, 38, 35, 0.6); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
+        .modal-overlay.active { display: flex; }
+        .modal-card { background: var(--card); border: 2px solid var(--border); border-radius: 16px; padding: 24px; max-width: 450px; width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+        .modal-title { font-size: calc(1.1em * var(--font-scale)); color: var(--accent); font-weight: 900; margin-bottom: 8px; }
+        .modal-desc { font-size: calc(0.85em * var(--font-scale)); color: var(--muted); margin-bottom: 16px; font-weight: 700; line-height: 1.6; }
+        .modal-btn-grid { display: grid; gap: 10px; }
+        .modal-player-btn { background: var(--surface); border: 2px solid var(--border); padding: 14px; border-radius: 10px; font-size: calc(1em * var(--font-scale)); font-weight: 900; color: var(--text); cursor: pointer; text-align: left; transition: all 0.2s; }
+        .modal-player-btn:active { background: #f0e4d4; border-color: var(--accent); }
     </style>
 </head>
 <body>
@@ -159,25 +185,28 @@
             <button type="button" class="primary-btn" onclick="goToGame()">進入遊戲</button>
             
             <div class="stats-card">
-                <div class="section-title" style="margin-bottom:12px;">📊 近 5 天戰績統計</div>
+                <div class="section-title" style="margin-bottom:12px;">📊 戰績統計 (依場次篩選)</div>
                 <div class="filter-grid">
                     <div>
-                        <label style="font-size: calc(0.75em * var(--font-scale)); color:var(--muted); font-weight:700; display:block; margin-bottom:4px;">開始時間</label>
-                        <input type="datetime-local" class="time-input" id="startTime" onchange="renderStats()">
+                        <label style="font-size: calc(0.75em * var(--font-scale)); color:var(--muted); font-weight:700; display:block; margin-bottom:4px;">開始場次</label>
+                        <select class="round-select" id="startRoundSelect" onchange="renderStats()"></select>
                     </div>
                     <div>
-                        <label style="font-size: calc(0.75em * var(--font-scale)); color:var(--muted); font-weight:700; display:block; margin-bottom:4px;">結束時間</label>
-                        <input type="datetime-local" class="time-input" id="endTime" onchange="renderStats()">
+                        <label style="font-size: calc(0.75em * var(--font-scale)); color:var(--muted); font-weight:700; display:block; margin-bottom:4px;">結束場次</label>
+                        <select class="round-select" id="endRoundSelect" onchange="renderStats()"></select>
                     </div>
                 </div>
-                <button type="button" class="ghost-btn" style="margin-top:0; margin-bottom:12px; padding:8px; font-size: calc(0.8em * var(--font-scale));" onclick="resetTimeFilter()">重設時間區間</button>
+                <button type="button" class="ghost-btn" style="margin-top:0; margin-bottom:12px; padding:8px; font-size: calc(0.8em * var(--font-scale));" onclick="resetRoundFilter()">顯示全部場次</button>
                 <div id="statsTableContainer"></div>
                 <button type="button" class="ghost-btn" style="color:var(--red); border-color:var(--red); font-size: calc(0.8em * var(--font-scale)); margin-top:15px; background:#fff8f8;" onclick="clearHistory()">🗑️ 清空所有歷史紀錄</button>
             </div>
         </div>
 
         <div class="screen" id="screenGame">
-            <div class="section-title">點數輸入</div>
+            <div class="section-title">
+                <span>點數輸入</span>
+                <button type="button" class="header-back-btn" onclick="goBack()">⚙️ 修改玩家</button>
+            </div>
             <div class="players-grid" id="playersGrid"></div>
 
             <div class="win-option-card">
@@ -204,6 +233,15 @@
                 <button type="button" class="ghost-btn" onclick="resetRound()">下一局</button>
                 <button type="button" class="ghost-btn" onclick="goBack()">重新設定玩家</button>
             </div>
+        </div>
+    </div>
+
+    <!-- 同分順序選擇視窗 Modal -->
+    <div class="modal-overlay" id="tieModal">
+        <div class="modal-card">
+            <div class="modal-title" id="modalTitle">⚠️ 點數相同判定</div>
+            <div class="modal-desc" id="modalDesc"></div>
+            <div class="modal-btn-grid" id="modalBtnGrid"></div>
         </div>
     </div>
 
@@ -275,7 +313,9 @@
             document.getElementById(`card-${i}`).classList.toggle('over50', val > 50);
         }
 
-        /* ----- 「贏先贏、輸先輸」排序邏輯 ----- */
+        /* ----- 同分互動詢問與「輸先輸」邏輯修正 ----- */
+        let currentRawPlayers = [];
+
         function calculate() {
             const players = [];
             for (let i = 0; i < playerCount; i++) {
@@ -289,35 +329,117 @@
                 players.push({ index: i, name: playerNames[i], score: parseInt(val) });
             }
 
-            // 按照分數排序，同分時根據「贏先贏、輸先輸」原則進行排序
-            const sorted = [...players].sort((a, b) => {
-                if (a.score !== b.score) {
-                    return a.score - b.score;
-                }
-                
-                const minScore = Math.min(...players.map(p => p.score));
-                
-                // 如果是爭奪第一名（贏家） -> 「贏先贏」：玩家順序小的排前面
-                if (a.score === minScore) {
-                    return a.index - b.index;
-                } 
-                // 如果是輸家同分 -> 「輸先輸」：玩家順序大的排前面（名次較好，輸較少），順序小的排後面（名次較後，輸較多）
-                else {
-                    return b.index - a.index;
-                }
-            });
+            document.getElementById('errorMsg').style.display = 'none';
 
-            const winner = sorted[0];
+            const minScore = Math.min(...players.map(p => p.score));
             const isSeven = document.getElementById('checkSeven').checked;
-            if (isSeven && winner.score !== 0) {
+            if (isSeven && minScore !== 0) {
                 const err = document.getElementById('errorMsg');
                 err.style.display = 'block';
                 err.textContent = "⚠️ 贏家點數不為 0，無法判定為尾之七";
                 return;
             }
-            document.getElementById('errorMsg').style.display = 'none';
+
+            currentRawPlayers = players;
+            resolveTiesAndSettle([]);
+        }
+
+        function resolveTiesAndSettle(resolvedSortedList) {
+            const remaining = currentRawPlayers.filter(p => !resolvedSortedList.includes(p));
+
+            if (remaining.length === 0) {
+                renderFinalResults(resolvedSortedList);
+                return;
+            }
+
+            const targetScore = Math.min(...remaining.map(p => p.score));
+            const tiedGroup = remaining.filter(p => p.score === targetScore);
+
+            if (tiedGroup.length === 1) {
+                resolvedSortedList.push(tiedGroup[0]);
+                resolveTiesAndSettle(resolvedSortedList);
+            } else {
+                const minScoreOverall = Math.min(...currentRawPlayers.map(p => p.score));
+                const isWinnerTie = (targetScore === minScoreOverall && resolvedSortedList.length === 0);
+
+                if (isWinnerTie) {
+                    let title = "🏆 爭奪第一名同分 (贏先贏)";
+                    let desc = `以下玩家同為最低分數 (${targetScore}點)。根據「贏先贏」原則，請選擇哪一位玩家【出牌順序最先】（將優先獲得第一名）：`;
+
+                    showTieModal(title, desc, tiedGroup, (firstPlayer) => {
+                        resolvedSortedList.push(firstPlayer);
+                        resolveTiesAndSettle(resolvedSortedList);
+                    });
+                } else {
+                    let title = "⚖️ 輸家點數相同 PK (輸先輸)";
+                    let desc = `以下玩家同為 ${targetScore} 點。根據「輸先輸」原則，請選擇哪一位玩家【出牌順序最先 (最早蓋牌)】：`;
+
+                    showTieModal(title, desc, tiedGroup, (firstPlayer) => {
+                        if (!tiedGroup.orderedTied) {
+                            tiedGroup.orderedTied = [];
+                        }
+                        
+                        tiedGroup.orderedTied.unshift(firstPlayer);
+                        const unassigned = tiedGroup.filter(p => !tiedGroup.orderedTied.includes(p));
+                        
+                        if (unassigned.length > 1) {
+                            resolveTiesSubGroup(resolvedSortedList, tiedGroup, unassigned);
+                        } else if (unassigned.length === 1) {
+                            tiedGroup.orderedTied.unshift(unassigned[0]);
+                            tiedGroup.orderedTied.forEach(p => resolvedSortedList.push(p));
+                            resolveTiesAndSettle(resolvedSortedList);
+                        }
+                    });
+                }
+            }
+        }
+
+        function resolveTiesSubGroup(resolvedSortedList, tiedGroup, unassigned) {
+            let title = "⚖️ 輸家點數相同 PK (輸先輸)";
+            let desc = `剩餘以下玩家同為 ${unassigned[0].score} 點。請選擇哪一位玩家【出牌順序較先 (較早蓋牌)】：`;
+
+            showTieModal(title, desc, unassigned, (firstPlayer) => {
+                tiedGroup.orderedTied.unshift(firstPlayer);
+                const nextUnassigned = unassigned.filter(p => p !== firstPlayer);
+
+                if (nextUnassigned.length > 1) {
+                    resolveTiesSubGroup(resolvedSortedList, tiedGroup, nextUnassigned);
+                } else {
+                    tiedGroup.orderedTied.unshift(nextUnassigned[0]);
+                    tiedGroup.orderedTied.forEach(p => resolvedSortedList.push(p));
+                    resolveTiesAndSettle(resolvedSortedList);
+                }
+            });
+        }
+
+        function showTieModal(title, desc, tiedGroup, callback) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalDesc').textContent = desc;
+            const grid = document.getElementById('modalBtnGrid');
+            grid.innerHTML = '';
+
+            tiedGroup.forEach(p => {
+                const btn = document.createElement('button');
+                btn.className = 'modal-player-btn';
+                btn.innerHTML = `👤 ${p.name} <span style="font-size:calc(0.8em * var(--font-scale)); color:var(--muted);">(${p.score} 點)</span>`;
+                btn.onclick = () => {
+                    document.getElementById('tieModal').classList.remove('active');
+                    callback(p);
+                };
+                grid.appendChild(btn);
+            });
+
+            document.getElementById('tieModal').classList.add('active');
+        }
+
+        /* ----- 最終計算與渲染 ----- */
+        function renderFinalResults(sorted) {
+            const winner = sorted[0];
+            const isSeven = document.getElementById('checkSeven').checked;
+
             document.querySelectorAll('.player-card').forEach(c => c.classList.remove('winner'));
             document.getElementById(`card-${winner.index}`).classList.add('winner');
+
             const isDetach = !isSeven && winner.score === 0;
             let multiplier = (isSeven ? 7 : (isDetach ? 2 : 1));
             let typeLabel = (isSeven ? "尾之七" : (isDetach ? "脫手" : "普通"));
@@ -377,7 +499,7 @@
             document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
         }
 
-        /* ----- 歷史紀錄與統計處理邏輯 ----- */
+        /* ----- 歷史紀錄與【場次】統計邏輯 ----- */
         function saveRoundRecord(details) {
             const history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
             history.push({
@@ -385,7 +507,7 @@
                 details: details
             });
             localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
-            renderStats();
+            renderStats(true);
         }
 
         function cleanOldHistory() {
@@ -395,78 +517,104 @@
             localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
         }
 
-        function renderStats() {
+        function formatTime(ts) {
+            const d = new Date(ts);
+            const month = (d.getMonth() + 1).toString().padStart(2, '0');
+            const date = d.getDate().toString().padStart(2, '0');
+            const hours = d.getHours().toString().padStart(2, '0');
+            const mins = d.getMinutes().toString().padStart(2, '0');
+            return `${month}/${date} ${hours}:${mins}`;
+        }
+
+        function updateRoundSelectOptions(historyCount, forceLatest = false) {
+            const startSelect = document.getElementById('startRoundSelect');
+            const endSelect = document.getElementById('endRoundSelect');
+            if(!startSelect || !endSelect) return;
+
+            const prevStart = parseInt(startSelect.value);
+
+            startSelect.innerHTML = '';
+            endSelect.innerHTML = '';
+
+            const history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+
+            for (let i = 0; i < historyCount; i++) {
+                const roundNum = i + 1;
+                const timeStr = formatTime(history[i].timestamp);
+                const optText = `第 ${roundNum} 局 (${timeStr})`;
+                
+                startSelect.innerHTML += `<option value="${i}">${optText}</option>`;
+                endSelect.innerHTML += `<option value="${i}">${optText}</option>`;
+            }
+
+            startSelect.value = (!isNaN(prevStart) && prevStart < historyCount) ? prevStart : 0;
+            endSelect.value = historyCount - 1;
+        }
+
+        function renderStats(forceLatest = false) {
             const history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
             const container = document.getElementById('statsTableContainer');
 
             if (history.length === 0) {
-                container.innerHTML = `<div style="text-align:center; color:var(--muted); font-size: calc(0.8em * var(--font-scale)); font-weight:700; padding:20px 0;">近 5 天內尚無戰績紀錄</div>`;
+                container.innerHTML = `<div style="text-align:center; color:var(--muted); font-size: calc(0.8em * var(--font-scale)); font-weight:700; padding:20px 0;">尚無戰績紀錄</div>`;
+                document.getElementById('startRoundSelect').innerHTML = `<option value="">無紀錄</option>`;
+                document.getElementById('endRoundSelect').innerHTML = `<option value="">無紀錄</option>`;
                 return;
             }
 
-            const startVal = document.getElementById('startTime').value;
-            const endVal = document.getElementById('endTime').value;
+            if (document.getElementById('startRoundSelect').options.length !== history.length || forceLatest) {
+                updateRoundSelectOptions(history.length, forceLatest);
+            }
 
-            const startTime = startVal ? new Date(startVal).getTime() : 0;
-            const endTime = endVal ? new Date(endVal).getTime() : Infinity;
+            let startIndex = parseInt(document.getElementById('startRoundSelect').value);
+            let endIndex = parseInt(document.getElementById('endRoundSelect').value);
+
+            if (isNaN(startIndex)) startIndex = 0;
+            if (isNaN(endIndex)) endIndex = history.length - 1;
+
+            if (startIndex > endIndex) {
+                let temp = startIndex;
+                startIndex = endIndex;
+                endIndex = temp;
+            }
 
             const playerStats = {};
 
-            history.forEach(round => {
-                if (round.timestamp >= startTime && round.timestamp <= endTime) {
-                    round.details.forEach(p => {
-                        if (!playerStats[p.name]) {
-                            playerStats[p.name] = { total: 0, wins: 0, losses: 0, games: 0 };
-                        }
-                        playerStats[p.name].total += p.amount;
-                        playerStats[p.name].games += 1;
-                        if (p.isWinner) {
-                            playerStats[p.name].wins += 1;
-                        } else {
-                            playerStats[p.name].losses += 1;
-                        }
-                    });
-                }
-            });
+            for (let i = startIndex; i <= endIndex; i++) {
+                const round = history[i];
+                if (!round || !round.details) continue;
 
-            const playerList = Object.keys(playerStats);
-            if (playerList.length === 0) {
-                container.innerHTML = `<div style="text-align:center; color:var(--muted); font-size: calc(0.8em * var(--font-scale)); font-weight:700; padding:20px 0;">選取的時間區間內無戰績紀錄</div>`;
-                return;
+                round.details.forEach(item => {
+                    if (!playerStats[item.name]) {
+                        playerStats[item.name] = 0;
+                    }
+                    playerStats[item.name] += item.amount;
+                });
             }
-
-            playerList.sort((a, b) => playerStats[b].total - playerStats[a].total);
 
             let html = `
                 <table class="stat-table">
                     <thead>
                         <tr>
                             <th>玩家</th>
-                            <th>勝 / 負</th>
-                            <th style="text-align:right;">總金額</th>
+                            <th>計分總額</th>
                         </tr>
                     </thead>
                     <tbody>`;
 
-            playerList.forEach(name => {
-                const s = playerStats[name];
-                let amtClass = 'stat-zero';
-                let prefix = '';
-                if (s.total > 0) {
-                    amtClass = 'stat-win';
-                    prefix = '+';
-                } else if (s.total < 0) {
-                    amtClass = 'stat-loss';
-                }
+            const sortedStats = Object.keys(playerStats)
+                .map(name => ({ name, amount: playerStats[name] }))
+                .sort((a, b) => b.amount - a.amount);
+
+            sortedStats.forEach(stat => {
+                let cls = 'stat-zero';
+                if (stat.amount > 0) cls = 'stat-win';
+                if (stat.amount < 0) cls = 'stat-loss';
 
                 html += `
                     <tr>
-                        <td style="font-weight:900;">${name}</td>
-                        <td style="color:var(--muted); font-size: calc(0.8em * var(--font-scale)); font-weight:700;">
-                            <span style="color:var(--green)">${s.wins}勝</span> / 
-                            <span style="color:var(--red)">${s.losses}負</span>
-                        </td>
-                        <td style="text-align:right;" class="${amtClass}">${prefix}$${s.total}</td>
+                        <td><strong>${stat.name}</strong></td>
+                        <td class="${cls}">${stat.amount > 0 ? '+' : ''}${stat.amount}</td>
                     </tr>`;
             });
 
@@ -474,35 +622,38 @@
             container.innerHTML = html;
         }
 
-        function resetTimeFilter() {
-            document.getElementById('startTime').value = '';
-            document.getElementById('endTime').value = '';
+        function resetRoundFilter() {
+            const history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            if (history.length === 0) return;
+            document.getElementById('startRoundSelect').value = 0;
+            document.getElementById('endRoundSelect').value = history.length - 1;
             renderStats();
         }
 
         function clearHistory() {
-            if (confirm("確定要清空近 5 天內的所有歷史戰績嗎？此操作無法復原。")) {
+            if (confirm('確定要清空所有歷史戰績紀錄嗎？此動作無法復原。')) {
                 localStorage.removeItem(STORAGE_KEY);
                 renderStats();
             }
         }
 
         function resetRound() {
+            for (let i = 0; i < playerCount; i++) {
+                const el = document.getElementById(`score-${i}`);
+                if (el) el.value = '';
+                const card = document.getElementById(`card-${i}`);
+                if (card) card.className = 'player-card';
+            }
             document.getElementById('checkSeven').checked = false;
             document.getElementById('results').style.display = 'none';
-            document.querySelectorAll('.player-card').forEach(c => c.classList.remove('winner', 'over50'));
-            playerNames.forEach((_, i) => {
-                const input = document.getElementById(`score-${i}`);
-                if(input) input.value = '';
-            });
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function goBack() {
             document.getElementById('screenGame').classList.remove('active');
             document.getElementById('screenSetup').classList.add('active');
-            document.getElementById('results').style.display = 'none';
             renderStats();
+            window.scrollTo(0, 0);
         }
     </script>
 </body>
