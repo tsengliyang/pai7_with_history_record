@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>排七計算機 PRO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #fdfbf7;             /* 溫暖奶油主背景 */
+            --surface: #f5efe6;        /* 淺奶茶輸入框與區塊 */
+            --card: #ffffff;           /* 純白卡片襯托對比 */
+            --border: #e2d7c7;         /* 柔和奶油棕邊框 */
+            --accent: #8c3b2b;         /* 沉穩深栗紅（主要強調與金額） */
+            --accent2: #d97724;        /* 暖陽橘（次要亮點） */
+            --red: #c0392b;            /* 警告/扣分深紅 */
+            --green: #27ae60;          /* 勝場深綠 */
+            --text: #2b2623;           /* 高對比深褐黑文字，清晰不刺眼 */
+            --muted: #73685f;          /* 次要說明文字 */
+            --font-scale: 1;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            font-family: 'Noto Serif TC', serif; 
+            min-height: 100vh; 
+            overflow-x: hidden;
+            font-size: calc(16px * var(--font-scale)); 
+            line-height: 1.5;
+        }                
+        
+        body::before {
+            content: ''; position: fixed; inset: 0;
+            background-image: repeating-linear-gradient(45deg, transparent, transparent 40px, rgba(140, 59, 43, 0.015) 40px, rgba(140, 59, 43, 0.015) 41px);
+            pointer-events: none; z-index: -1;
+        }
+        .container { position: relative; z-index: 10; max-width: 800px; margin: 0 auto; padding: 24px 16px 60px; }
+        header { text-align: center; padding: 20px 0 30px; }
+        h1 {
+            font-weight: 900; 
+            font-size: calc(2.8em * var(--font-scale)); 
+            letter-spacing: 0.15em;
+            color: var(--accent);
+            text-shadow: 1px 1px 0px rgba(0,0,0,0.05);
+        }
+
+        .font-control-card {
+            background: var(--card);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 4px 12px rgba(115, 104, 95, 0.05);
+        }
+        .font-control-card label { font-size: calc(0.9em * var(--font-scale)); color: var(--accent); font-weight: 900; white-space: nowrap; }
+        .font-slider { flex: 1; accent-color: var(--accent); cursor: pointer; height: 8px; }
+
+        .guide-box { background: #f7f0e6; border: 2px dashed var(--border); border-radius: 12px; padding: 18px; margin-bottom: 24px; }
+        .guide-title { font-size: calc(0.95em * var(--font-scale)); color: var(--accent); font-weight: 900; margin-bottom: 10px; }
+        .guide-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .guide-item { font-size: calc(0.85em * var(--font-scale)); color: var(--text); font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .guide-num { width: 22px; height: 22px; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Orbitron'; font-size: calc(0.7em * var(--font-scale)); font-weight: 800; flex-shrink: 0; }
+        .section-title { font-size: calc(0.85em * var(--font-scale)); letter-spacing: 0.15em; color: var(--accent); font-weight: 900; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; }
+        .section-title::after { content: ''; flex: 1; height: 2px; background: linear-gradient(to right, var(--border), transparent); }
+        .screen { display: none; }
+        .screen.active { display: block; }
+        .setup-card { background: var(--card); border: 2px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 20px; box-shadow: 0 4px 16px rgba(115, 104, 95, 0.06); }
+        .count-row { display: flex; align-items: center; gap: 12px; }
+        .count-label { font-size: calc(1.15em * var(--font-scale)); font-weight: 900; flex: 1; color: var(--text); }
+        .count-stepper { display: flex; align-items: center; background: var(--surface); border: 2px solid var(--border); border-radius: 10px; overflow: hidden; }
+        .step-btn { background: var(--surface); border: none; color: var(--accent); width: 50px; height: 50px; cursor: pointer; font-size: calc(1.4em * var(--font-scale)); font-weight: 900; transition: background 0.2s; }
+        .step-btn:active { background: var(--border); }
+        .step-btn:disabled { color: #c5b8a5; cursor: not-allowed; }
+        .count-display { font-family: 'Orbitron'; width: 45px; text-align: center; color: var(--accent); font-weight: 800; font-size: calc(1.25em * var(--font-scale)); }
+        .names-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 20px; }
+        .name-input { background: var(--surface); border: 2px solid var(--border); border-radius: 8px; color: var(--text); padding: 12px; width: 100%; outline: none; font-size: calc(1em * var(--font-scale)); font-weight: 700; }
+        .name-input::placeholder { color: #a09388; font-weight: 500; }
+        .name-input:focus { border-color: var(--accent); background: #fff; }
+        
+        .players-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px; }
+        .player-card { background: var(--card); border: 2px solid var(--border); border-radius: 14px; padding: 16px; position: relative; box-shadow: 0 2px 8px rgba(115, 104, 95, 0.05); }
+        .player-card.winner { border-color: var(--accent); background: #fdf6ed; }
+        .player-card.over50 { border-color: var(--red); background: #fdf2f2; }
+        .score-input { background: var(--surface); border: 2px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'Orbitron'; font-size: calc(1.4em * var(--font-scale)); font-weight: 800; width: 100%; text-align: center; padding: 10px; margin-top: 8px; }
+        .score-input:focus { border-color: var(--accent); background: #fff; }
+        
+        .primary-btn { width: 100%; padding: 20px; background: var(--accent); border: none; border-radius: 12px; color: #ffffff; font-weight: 900; letter-spacing: 2px; cursor: pointer; box-shadow: 0 6px 18px rgba(140, 59, 43, 0.25); font-size: calc(1.2em * var(--font-scale)); transition: background 0.2s; }
+        .primary-btn:active { transform: scale(0.98); background: #732f22; }
+        
+        .win-option-card { background: var(--card); border: 2px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(115, 104, 95, 0.05); }
+        .switch { position: relative; width: 56px; height: 30px; cursor: pointer; flex-shrink: 0; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; inset: 0; background-color: var(--surface); border: 2px solid var(--border); transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: var(--muted); transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #f7e2d3; border-color: var(--accent); }
+        input:checked + .slider:before { transform: translateX(26px); background-color: var(--accent); }
+        
+        .error-msg { background: #fde8e8; border: 2px solid var(--red); border-radius: 10px; color: var(--red); font-size: calc(0.95em * var(--font-scale)); font-weight: 700; text-align: center; padding: 14px; margin-bottom: 18px; display: none; }
+        .payment-table { background: var(--card); border: 2px solid var(--border); border-radius: 14px; overflow: hidden; margin-top: 16px; box-shadow: 0 4px 12px rgba(115, 104, 95, 0.05); }
+        .payment-row { display: grid; grid-template-columns: 1fr auto auto; padding: 16px 20px; border-bottom: 1px solid var(--border); align-items: center; gap: 12px; }
+        .pay-amount { font-family: 'Orbitron'; font-weight: 800; color: var(--red); text-align: right; font-size: calc(1.2em * var(--font-scale)); }
+        .pay-tag { font-size: calc(0.75em * var(--font-scale)); padding: 4px 8px; border-radius: 6px; font-weight: 700; background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+        .total-row { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: #faf0e6; }
+        .ghost-btn { width: 100%; padding: 14px; background: #fff; border: 2px solid var(--border); color: var(--text); font-weight: 700; margin-top: 12px; border-radius: 10px; cursor: pointer; font-size: calc(1em * var(--font-scale)); }
+        .ghost-btn:active { background: var(--surface); }
+
+        .stats-card { background: var(--card); border: 2px solid var(--border); border-radius: 16px; padding: 22px; margin-top: 30px; box-shadow: 0 4px 12px rgba(115, 104, 95, 0.05); }
+        .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
+        .time-input { background: var(--surface); border: 2px solid var(--border); border-radius: 8px; color: var(--text); padding: 10px; width: 100%; font-size: calc(0.85em * var(--font-scale)); font-weight: 700; color-scheme: light; }
+        .stat-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .stat-table th, .stat-table td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: calc(0.95em * var(--font-scale)); }
+        .stat-table th { color: var(--accent); font-weight: 900; font-size: calc(0.85em * var(--font-scale)); }
+        .stat-win { color: var(--green); font-family: 'Orbitron'; font-weight: 800; }
+        .stat-loss { color: var(--red); font-family: 'Orbitron'; font-weight: 800; }
+        .stat-zero { color: var(--muted); font-family: 'Orbitron'; font-weight: 700; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>排 七</h1>
+            <p style="text-align:center; font-size: calc(0.8em * var(--font-scale)); color:var(--muted); letter-spacing: 4px; font-weight: 700;">AUTOMATIC CALCULATOR</p>
+        </header>
+
+        <div class="font-control-card">
+            <label>A−</label>
+            <input type="range" class="font-slider" id="fontSlider" min="0.8" max="1.5" step="0.05" value="1" oninput="updateFontSize(this.value)">
+            <label>A+</label>
+        </div>
+
+        <div class="screen active" id="screenSetup">
+            <div class="guide-box">
+                <div class="guide-title">📖 使用指南</div>
+                <div class="guide-list">
+                    <div class="guide-item"><span class="guide-num">1</span> 修改人數與座位順序</div>
+                    <div class="guide-item"><span class="guide-num">2</span> 輸入玩家姓名</div>
+                    <div class="guide-item"><span class="guide-num">3</span> 輸入玩家點數</div>
+                    <div class="guide-item"><span class="guide-num">4</span> 計算結果</div>
+                </div>
+            </div>
+
+            <div class="section-title">玩家設定</div>
+            <div class="setup-card">
+                <div class="count-row">
+                    <span class="count-label">遊玩人數</span>
+                    <div class="count-stepper">
+                        <button type="button" class="step-btn" id="btnMinus" onclick="changeCount(-1)">−</button>
+                        <div class="count-display" id="countDisplay">7</div>
+                        <button type="button" class="step-btn" id="btnPlus" onclick="changeCount(1)">+</button>
+                    </div>
+                </div>
+                <div class="names-grid" id="namesGrid"></div>
+            </div>
+            <button type="button" class="primary-btn" onclick="goToGame()">進入遊戲</button>
+            
+            <div class="stats-card">
+                <div class="section-title" style="margin-bottom:12px;">📊 近 5 天戰績統計</div>
+                <div class="filter-grid">
+                    <div>
+                        <label style="font-size: calc(0.75em * var(--font-scale)); color:var(--muted); font-weight:700; display:block; margin-bottom:4px;">開始時間</label>
+                        <input type="datetime-local" class="time-input" id="startTime" onchange="renderStats()">
+                    </div>
+                    <div>
+                        <label style="font-size: calc(0.75em * var(--font-scale)); color:var(--muted); font-weight:700; display:block; margin-bottom:4px;">結束時間</label>
+                        <input type="datetime-local" class="time-input" id="endTime" onchange="renderStats()">
+                    </div>
+                </div>
+                <button type="button" class="ghost-btn" style="margin-top:0; margin-bottom:12px; padding:8px; font-size: calc(0.8em * var(--font-scale));" onclick="resetTimeFilter()">重設時間區間</button>
+                <div id="statsTableContainer"></div>
+                <button type="button" class="ghost-btn" style="color:var(--red); border-color:var(--red); font-size: calc(0.8em * var(--font-scale)); margin-top:15px; background:#fff8f8;" onclick="clearHistory()">🗑️ 清空所有歷史紀錄</button>
+            </div>
+        </div>
+
+        <div class="screen" id="screenGame">
+            <div class="section-title">點數輸入</div>
+            <div class="players-grid" id="playersGrid"></div>
+
+            <div class="win-option-card">
+                <div>
+                    <div style="font-weight: 900; font-size: calc(1em * var(--font-scale)); color: var(--text);">特殊結尾</div>
+                    <div style="font-size: calc(0.8em * var(--font-scale)); color:var(--muted); margin-top:2px; font-weight: 500;">若贏家 0 點自動判定為「脫手 (×2)」</div>
+                </div>
+                <label class="toggle-container" style="display: flex; align-items: center;">
+                    <span style="font-size: calc(0.95em * var(--font-scale)); font-weight: 900; color: var(--accent); margin-right:10px;">尾之七 (×7)</span>
+                    <div class="switch">
+                        <input type="checkbox" id="checkSeven">
+                        <span class="slider"></span>
+                    </div>
+                </label>
+            </div>
+
+            <div class="error-msg" id="errorMsg"></div>
+            <button type="button" class="primary-btn" onclick="calculate()">計算本局結算</button>
+
+            <div id="results" style="display:none; margin-top:24px;">
+                <div class="section-title">計算結果</div>
+                <div id="resultSummary" style="text-align:center; margin-bottom:16px; background: var(--card); padding: 22px; border-radius: 14px; border: 2px solid var(--border); box-shadow: 0 4px 12px rgba(115, 104, 95, 0.05);"></div>
+                <div class="payment-table" id="paymentTable"></div>
+                <button type="button" class="ghost-btn" onclick="resetRound()">下一局</button>
+                <button type="button" class="ghost-btn" onclick="goBack()">重新設定玩家</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let playerCount = 7;
+        let playerNames = [];
+        const STORAGE_KEY = 'pai7_game_history_v1';
+
+        function updateFontSize(val) {
+            document.documentElement.style.setProperty('--font-scale', val);
+        }
+
+        window.onload = function() {
+            renderNameInputs();
+            cleanOldHistory();
+            renderStats();
+        };
+
+        function renderNameInputs() {
+            const grid = document.getElementById('namesGrid');
+            if(!grid) return;
+            grid.innerHTML = '';
+            for (let i = 0; i < playerCount; i++) {
+                const div = document.createElement('div');
+                div.innerHTML = `<input class="name-input" id="name-${i}" placeholder="玩家 ${i+1}" value="${playerNames[i] || ''}">`;
+                grid.appendChild(div);
+            }
+        }
+
+        function changeCount(delta) {
+            for (let i = 0; i < playerCount; i++) {
+                const el = document.getElementById(`name-${i}`);
+                if (el) playerNames[i] = el.value;
+            }
+            playerCount = Math.max(2, Math.min(10, playerCount + delta));
+            document.getElementById('countDisplay').textContent = playerCount;
+            document.getElementById('btnMinus').disabled = (playerCount <= 2);
+            document.getElementById('btnPlus').disabled = (playerCount >= 10);
+            renderNameInputs();
+        }
+
+        function goToGame() {
+            playerNames = [];
+            for (let i = 0; i < playerCount; i++) {
+                const val = document.getElementById(`name-${i}`).value.trim();
+                playerNames.push(val || `玩家 ${i+1}`);
+            }
+            buildGameGrid();
+            document.getElementById('screenSetup').classList.remove('active');
+            document.getElementById('screenGame').classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        function buildGameGrid() {
+            const grid = document.getElementById('playersGrid');
+            grid.innerHTML = '';
+            playerNames.forEach((name, i) => {
+                grid.innerHTML += `
+                    <div class="player-card" id="card-${i}">
+                        <div style="position:absolute; right:12px; top:12px; font-family:'Orbitron'; font-size: calc(0.75em * var(--font-scale)); font-weight:800; color:var(--muted);">${i+1}</div>
+                        <div style="font-size: calc(1em * var(--font-scale)); font-weight:900; color:var(--text);">${name}</div>
+                        <input class="score-input" id="score-${i}" type="number" placeholder="點數" oninput="checkStyle(${i})">
+                    </div>`;
+            });
+        }
+
+        function checkStyle(i) {
+            const val = parseInt(document.getElementById(`score-${i}`).value);
+            document.getElementById(`card-${i}`).classList.toggle('over50', val > 50);
+        }
+
+        /* ----- 「贏先贏、輸先輸」排序邏輯 ----- */
+        function calculate() {
+            const players = [];
+            for (let i = 0; i < playerCount; i++) {
+                const val = document.getElementById(`score-${i}`).value;
+                if (val === "") { 
+                    const err = document.getElementById('errorMsg');
+                    err.style.display = 'block';
+                    err.textContent = "請填寫所有玩家的點數";
+                    return; 
+                }
+                players.push({ index: i, name: playerNames[i], score: parseInt(val) });
+            }
+
+            // 按照分數排序，同分時根據「贏先贏、輸先輸」原則進行排序
+            const sorted = [...players].sort((a, b) => {
+                if (a.score !== b.score) {
+                    return a.score - b.score;
+                }
+                
+                const minScore = Math.min(...players.map(p => p.score));
+                
+                // 如果是爭奪第一名（贏家） -> 「贏先贏」：玩家順序小的排前面
+                if (a.score === minScore) {
+                    return a.index - b.index;
+                } 
+                // 如果是輸家同分 -> 「輸先輸」：玩家順序大的排前面（名次較好，輸較少），順序小的排後面（名次較後，輸較多）
+                else {
+                    return b.index - a.index;
+                }
+            });
+
+            const winner = sorted[0];
+            const isSeven = document.getElementById('checkSeven').checked;
+            if (isSeven && winner.score !== 0) {
+                const err = document.getElementById('errorMsg');
+                err.style.display = 'block';
+                err.textContent = "⚠️ 贏家點數不為 0，無法判定為尾之七";
+                return;
+            }
+            document.getElementById('errorMsg').style.display = 'none';
+            document.querySelectorAll('.player-card').forEach(c => c.classList.remove('winner'));
+            document.getElementById(`card-${winner.index}`).classList.add('winner');
+            const isDetach = !isSeven && winner.score === 0;
+            let multiplier = (isSeven ? 7 : (isDetach ? 2 : 1));
+            let typeLabel = (isSeven ? "尾之七" : (isDetach ? "脫手" : "普通"));
+            let tagColor = (isSeven ? "var(--accent)" : (isDetach ? "var(--accent2)" : "var(--muted)"));
+            let total = 0;
+            let html = '';
+
+            const roundDetails = [];
+
+            for (let i = 1; i < sorted.length; i++) {
+                const p = sorted[i];
+                const base = i * 10;
+                const over50 = p.score > 50;
+                const final = base * multiplier * (over50 ? 2 : 1);
+                total += final;
+
+                roundDetails.push({
+                    name: p.name,
+                    amount: -final,
+                    isWinner: false
+                });
+
+                html += `
+                    <div class="payment-row">
+                        <div>
+                            <div style="font-size: calc(1em * var(--font-scale)); font-weight:900;">${p.name}</div>
+                            <div style="font-size: calc(0.75em * var(--font-scale)); color:var(--muted); font-weight:700;">第 ${i+1} 名 / ${p.score} 點</div>
+                        </div>
+                        <div>
+                            ${over50 ? '<span class="pay-tag" style="color:var(--red); border-color:var(--red); background:#fdf2f2;">破50 (×2)</span>' : ''}
+                            <span class="pay-tag" style="color:${tagColor}; border-color:${tagColor}">${typeLabel} (×${multiplier})</span>
+                        </div>
+                        <div class="pay-amount">${final}</div>
+                    </div>`;
+            }
+
+            roundDetails.push({
+                name: winner.name,
+                amount: total,
+                isWinner: true
+            });
+
+            saveRoundRecord(roundDetails);
+
+            document.getElementById('resultSummary').innerHTML = `
+                <div style="font-size: calc(0.75em * var(--font-scale)); color:var(--muted); letter-spacing:2px; font-weight:800;">ROUND WINNER</div>
+                <div style="font-size: calc(2em * var(--font-scale)); font-weight:900; color:var(--accent); margin: 6px 0;">${winner.name}</div>
+                <div style="display:inline-block; padding: 6px 16px; background:var(--surface); border-radius:20px; font-size: calc(0.85em * var(--font-scale)); font-weight:700; border:1px solid var(--border);">
+                    贏法判定：<span style="color:var(--accent); font-weight:900;">${typeLabel} (×${multiplier})</span>
+                </div>`;
+            document.getElementById('paymentTable').innerHTML = html + `
+                <div class="total-row">
+                    <span style="font-size: calc(1em * var(--font-scale)); font-weight:900;">贏家總合收入</span>
+                    <span style="font-family:'Orbitron'; font-size: calc(1.75em * var(--font-scale)); font-weight:900; color:var(--accent)">$${total}</span>
+                </div>`;
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        /* ----- 歷史紀錄與統計處理邏輯 ----- */
+        function saveRoundRecord(details) {
+            const history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            history.push({
+                timestamp: Date.now(),
+                details: details
+            });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+            renderStats();
+        }
+
+        function cleanOldHistory() {
+            const history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            const fiveDaysAgo = Date.now() - (5 * 24 * 60 * 60 * 1000);
+            const filtered = history.filter(item => item.timestamp >= fiveDaysAgo);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+        }
+
+        function renderStats() {
+            const history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            const container = document.getElementById('statsTableContainer');
+
+            if (history.length === 0) {
+                container.innerHTML = `<div style="text-align:center; color:var(--muted); font-size: calc(0.8em * var(--font-scale)); font-weight:700; padding:20px 0;">近 5 天內尚無戰績紀錄</div>`;
+                return;
+            }
+
+            const startVal = document.getElementById('startTime').value;
+            const endVal = document.getElementById('endTime').value;
+
+            const startTime = startVal ? new Date(startVal).getTime() : 0;
+            const endTime = endVal ? new Date(endVal).getTime() : Infinity;
+
+            const playerStats = {};
+
+            history.forEach(round => {
+                if (round.timestamp >= startTime && round.timestamp <= endTime) {
+                    round.details.forEach(p => {
+                        if (!playerStats[p.name]) {
+                            playerStats[p.name] = { total: 0, wins: 0, losses: 0, games: 0 };
+                        }
+                        playerStats[p.name].total += p.amount;
+                        playerStats[p.name].games += 1;
+                        if (p.isWinner) {
+                            playerStats[p.name].wins += 1;
+                        } else {
+                            playerStats[p.name].losses += 1;
+                        }
+                    });
+                }
+            });
+
+            const playerList = Object.keys(playerStats);
+            if (playerList.length === 0) {
+                container.innerHTML = `<div style="text-align:center; color:var(--muted); font-size: calc(0.8em * var(--font-scale)); font-weight:700; padding:20px 0;">選取的時間區間內無戰績紀錄</div>`;
+                return;
+            }
+
+            playerList.sort((a, b) => playerStats[b].total - playerStats[a].total);
+
+            let html = `
+                <table class="stat-table">
+                    <thead>
+                        <tr>
+                            <th>玩家</th>
+                            <th>勝 / 負</th>
+                            <th style="text-align:right;">總金額</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+            playerList.forEach(name => {
+                const s = playerStats[name];
+                let amtClass = 'stat-zero';
+                let prefix = '';
+                if (s.total > 0) {
+                    amtClass = 'stat-win';
+                    prefix = '+';
+                } else if (s.total < 0) {
+                    amtClass = 'stat-loss';
+                }
+
+                html += `
+                    <tr>
+                        <td style="font-weight:900;">${name}</td>
+                        <td style="color:var(--muted); font-size: calc(0.8em * var(--font-scale)); font-weight:700;">
+                            <span style="color:var(--green)">${s.wins}勝</span> / 
+                            <span style="color:var(--red)">${s.losses}負</span>
+                        </td>
+                        <td style="text-align:right;" class="${amtClass}">${prefix}$${s.total}</td>
+                    </tr>`;
+            });
+
+            html += `</tbody></table>`;
+            container.innerHTML = html;
+        }
+
+        function resetTimeFilter() {
+            document.getElementById('startTime').value = '';
+            document.getElementById('endTime').value = '';
+            renderStats();
+        }
+
+        function clearHistory() {
+            if (confirm("確定要清空近 5 天內的所有歷史戰績嗎？此操作無法復原。")) {
+                localStorage.removeItem(STORAGE_KEY);
+                renderStats();
+            }
+        }
+
+        function resetRound() {
+            document.getElementById('checkSeven').checked = false;
+            document.getElementById('results').style.display = 'none';
+            document.querySelectorAll('.player-card').forEach(c => c.classList.remove('winner', 'over50'));
+            playerNames.forEach((_, i) => {
+                const input = document.getElementById(`score-${i}`);
+                if(input) input.value = '';
+            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function goBack() {
+            document.getElementById('screenGame').classList.remove('active');
+            document.getElementById('screenSetup').classList.add('active');
+            document.getElementById('results').style.display = 'none';
+            renderStats();
+        }
+    </script>
+</body>
+</html>
