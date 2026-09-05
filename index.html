@@ -231,7 +231,7 @@
                 <div id="resultSummary" style="text-align:center; margin-bottom:16px; background: var(--card); padding: 22px; border-radius: 14px; border: 2px solid var(--border); box-shadow: 0 4px 12px rgba(115, 104, 95, 0.05);"></div>
                 <div class="payment-table" id="paymentTable"></div>
                 <button type="button" class="ghost-btn" onclick="resetRound()">下一局</button>
-                <button type="button" class="ghost-btn" onclick="goBack()">重新設定玩家</button>
+                <button type="button" class="ghost-btn" onclick="goBack()">回主畫面</button>
             </div>
         </div>
     </div>
@@ -310,7 +310,7 @@
 
         function checkStyle(i) {
             const val = parseInt(document.getElementById(`score-${i}`).value);
-            document.getElementById(`card-${i}`).classList.toggle('over50', val > 50);
+            document.getElementById(`card-${i}`).classList.toggle('over50', val >= 50);
         }
 
         /* ----- 同分互動詢問與「輸先輸」邏輯修正 ----- */
@@ -449,16 +449,20 @@
 
             const roundDetails = [];
 
+            // 尾之七回饋規則：贏家額外回饋每位輸家固定金額（<5人局回饋50，>=5人局回饋100）
+            const sevenRefund = isSeven ? (sorted.length < 5 ? 50 : 100) : 0;
+
             for (let i = 1; i < sorted.length; i++) {
                 const p = sorted[i];
                 const base = i * 10;
-                const over50 = p.score > 50;
-                const final = base * multiplier * (over50 ? 2 : 1);
-                total += final;
+                const over50 = p.score >= 50;
+                const rawFinal = base * multiplier * (over50 ? 2 : 1);
+                const netFinal = rawFinal - sevenRefund;
+                total += netFinal;
 
                 roundDetails.push({
                     name: p.name,
-                    amount: -final,
+                    amount: -netFinal,
                     isWinner: false
                 });
 
@@ -471,8 +475,9 @@
                         <div>
                             ${over50 ? '<span class="pay-tag" style="color:var(--red); border-color:var(--red); background:#fdf2f2;">破50 (×2)</span>' : ''}
                             <span class="pay-tag" style="color:${tagColor}; border-color:${tagColor}">${typeLabel} (×${multiplier})</span>
+                            ${sevenRefund > 0 ? `<span class="pay-tag" style="color:var(--green); border-color:var(--green); background:#eafaf0;">尾七回饋 -$${sevenRefund}</span>` : ''}
                         </div>
-                        <div class="pay-amount">${final}</div>
+                        <div class="pay-amount">${netFinal}</div>
                     </div>`;
             }
 
@@ -489,7 +494,8 @@
                 <div style="font-size: calc(2em * var(--font-scale)); font-weight:900; color:var(--accent); margin: 6px 0;">${winner.name}</div>
                 <div style="display:inline-block; padding: 6px 16px; background:var(--surface); border-radius:20px; font-size: calc(0.85em * var(--font-scale)); font-weight:700; border:1px solid var(--border);">
                     贏法判定：<span style="color:var(--accent); font-weight:900;">${typeLabel} (×${multiplier})</span>
-                </div>`;
+                </div>
+                ${sevenRefund > 0 ? `<div style="margin-top:10px; font-size: calc(0.8em * var(--font-scale)); color:var(--green); font-weight:800;">🎁 尾之七回饋：贏家需回饋每位輸家 $${sevenRefund}（已於下方金額中扣除）</div>` : ''}`;
             document.getElementById('paymentTable').innerHTML = html + `
                 <div class="total-row">
                     <span style="font-size: calc(1em * var(--font-scale)); font-weight:900;">贏家總合收入</span>
