@@ -449,8 +449,8 @@
 
             const roundDetails = [];
 
-            // 尾之七回饋規則：贏家額外回饋每位輸家固定金額（<5人局回饋50，>=5人局回饋100）
-            const sevenRefund = isSeven ? (sorted.length < 5 ? 50 : 100) : 0;
+            // 尾之七回饋規則：贏家額外回饋每位輸家固定金額（<=5人局回饋50，>5人局回饋100）
+            const sevenRefund = isSeven ? (sorted.length <= 5 ? 50 : 100) : 0;
 
             for (let i = 1; i < sorted.length; i++) {
                 const p = sorted[i];
